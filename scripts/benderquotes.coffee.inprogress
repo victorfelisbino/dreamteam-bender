@@ -1,0 +1,63 @@
+# Description:
+#   Trigger random bender quotes
+#
+# Dependencies:
+#   None
+#
+# Configuration:
+#   None
+#
+# Commands:
+#   hubot futurama quote
+#
+# Author:
+#   dk
+
+
+String.prototype.capitalize ||= -> @.charAt(0).toUpperCase() + @.slice(1)
+
+module.exports = (robot) ->
+  unless robot.brain.benderquotes?.grouped_responses?
+    do_it_responses = BENDERQUOTES.split('\n')
+    robot.brain.benderquotes =
+      responses: benderquotes_responses
+      grouped_responses: compile_list(benderquotes_responses)
+
+  robot.respond /benderquotes$/i, (msg) ->
+    msg.send msg.random(robot.brain.benderquotes.responses)
+
+  robot.respond /I think\??/i, (msg) ->
+    group = msg.match[1].toLowerCase().trim()
+    if robot.brain.benderquotes.grouped_responses[group]?
+      msg.send msg.random robot.brain.benderquotes.grouped_responses[group]
+    else
+      msg.send "I keep running people over. I\'m not famous enough to get away with it."
+
+  robot.respond /--/i, (msg) ->
+    msg.send "byte my 8-bit metal ass. that's byte with a y."
+compile_list = (responses) ->
+  grouped = {}
+  responses.forEach (r) ->
+    if /do it/.test(r)
+      group_name = r.slice(0, r.indexOf('do it')).toLowerCase().trim()
+    else
+      group_name = r.slice(0, r.indexOf(' ')).toLowerCase().trim()
+
+    grouped[group_name] ||= []
+    grouped[group_name].push r
+  return grouped
+
+QUOTES = '''Hahahahaha. Oh wait you’re serious. Let me laugh even harder.
+I guess if you want children beaten, you have to do it yourself.
+This is the worst kind of discrimination there is: the kind against me!
+I\’ll build by own theme park. With black jack, and hookers. In fact, forget the park!
+That\’s closest thing to \‘Bender is great\’ that anyone other me has ever said.
+You know what cheers me up? Other people\’s misfortune.
+Anything less than immortality is a complete waste of time.
+Blackmail is such an ugly word. I prefer extortion. The ‘x’ makes it sound cool.
+Have you tried turning off the TV, sitting down with your children, and hitting them?
+You\’re a pimple on society\’s ass and you\’ll never amount to anything!
+I got ants my butt, and I needs to strut!
+I don\’t have emotions and sometimes that makes me very sad.
+I say the whole world must learn of our peacefull ways... by force!'''
+
